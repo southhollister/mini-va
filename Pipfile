@@ -6,6 +6,6 @@ name = "pypi"
 [dev-packages]
 
 [packages]
-tornado = "3.1.1"
+tornado = "*"
 [requires]
 python_version = "3.5"
