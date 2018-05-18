@@ -29,9 +29,8 @@ class MainHandler(tornado.web.RequestHandler):
         answer = session.engine.ask(self.question)
         self.write(
             """
-            ident=%s
-            
-            Answer Text:
+            <p>ident=%s</p>
+            <p>Answer Text:</p
             %s
             """ % (self.ident, str(answer))
 
