@@ -27,7 +27,15 @@ class MainHandler(tornado.web.RequestHandler):
 
         session = self.sessions[self.ident]
         answer = session.engine.ask(self.question)
-        self.write('ident=%s \n\n Answer Text:\n %s' % (self.ident, str(answer)))
+        self.write(
+            """
+            ident=%s
+            
+            Answer Text:
+            %s
+            """ % (self.ident, str(answer))
+
+        )
 
 
 def main():
