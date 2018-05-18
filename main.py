@@ -6,15 +6,28 @@ import tornado.web
 
 
 class MainHandler(tornado.web.RequestHandler):
-    sessions = []
+    sessions = {}
 
     def initialize(self):
         self.engine = VPerson("https://vastage1.creativevirtual15.com/coxstaging/bot.htm")
 
     def get(self):
         self.question = self.get_argument('question')
-        answer = self.engine.ask(self.question)
-        self.write(str(answer))
+        self.ident = self.get_arguments('ident')
+        # self.write(str(self.ident))
+
+        # if an ident is in the request grab it
+        if self.ident:
+            self.ident = self.ident[-1]
+        # else get an ident for this new session and store session
+        else:
+            self.engine.request()
+            self.ident = self.engine._params['ident']
+            self.sessions[self.ident] = self
+
+        session = self.sessions[self.ident]
+        answer = session.engine.ask(self.question)
+        self.write('Session Id: %s \n\r Answer Text:\n %s' % (self.ident, str(answer)))
 
     # def post(self):
     #
@@ -28,8 +41,7 @@ def main():
     ])
 
     http_server = tornado.httpserver.HTTPServer(application)
-    port = 8888
-    http_server.listen(port, address='127.0.0.1')
+    http_server.listen(int(os.environ.get('PORT', 5000)))
     tornado.ioloop.IOLoop.instance().start()
 
 
