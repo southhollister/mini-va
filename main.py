@@ -50,6 +50,8 @@ class AnswerParts(object):
             self._idx = 0
             raise StopIteration
 
+    __next__ = next
+
     def __len__(self):
         return len(self.answer_parts)
 
