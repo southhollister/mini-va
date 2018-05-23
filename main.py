@@ -107,7 +107,8 @@ class MainHandler(tornado.web.RequestHandler):
             message.body(str(part))
             response.append(message)
 
-        self.write(response)
+        self.write(str(response))
+
 
         # try:
         #
