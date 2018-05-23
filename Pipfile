@@ -8,5 +8,7 @@ name = "pypi"
 [packages]
 tornado = "*"
 requests = "*"
+twilio = "*"
+
 [requires]
 python_version = "3.5"
