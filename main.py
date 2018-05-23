@@ -5,6 +5,11 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import xml.etree.ElementTree as ET
+from twilio.twiml.messaging_response import Message, MessagingResponse
+
+
+ACCOUNT_SID = "AC17f854bd01970aab68b981a47b8e4b51"
+ACCOUNT_TOKEN = "5422517ccbeb628e6bfccbc76eddeb49"
 
 
 class Engine(VPerson):
@@ -72,32 +77,45 @@ class MainHandler(tornado.web.RequestHandler):
     def initialize(self):
         self.engine = Engine("https://vastage1.creativevirtual15.com/quarkstaging/bot.htm")
 
-    def get(self):
-        init = self.engine.init()
-        ident = init['ident']
-        answer = init['init_text']
-
-        if ident not in self.sessions:
-            del self.entries[:]
-
-        self.sessions[ident] = self
-        self.entries.append(('', answer))
-
-        self.render('index.html', ident=ident, entries=self.entries)
+    # def get(self):
+    #     init = self.engine.init()
+    #     ident = init['ident']
+    #     answer = init['init_text']
+    #
+    #     if ident not in self.sessions:
+    #         del self.entries[:]
+    #
+    #     self.sessions[ident] = self
+    #     self.entries.append(('', answer))
+    #
+    #     self.render('index.html', ident=ident, entries=self.entries)
 
     def post(self, *args, **kwargs):
-        question = self.get_argument('input-bar')
-        ident = self.get_argument('ident')
+        # question = self.get_argument('input-bar')
+        # ident = self.get_argument('ident')
 
-        try:
-            answer = self.sessions[ident].engine.ask(question, use_parts=True)
-        except KeyError:
-            self.write('Your session has expired.')
-            return
+        question = self.get_argument('Body')
+        from_num = self.get_argument('From')
 
-        self.entries.append((question, answer))
-        # TODO Set up to use twillio or some othe service
-        self.render('index.html', ident=ident, entries=self.entries)
+        if from_num not in self.sessions:
+            self.sessions[from_num] = self
+
+        answer = self.sessions[from_num].engine.ask(question, use_parts=True)
+        response = MessagingResponse()
+        for part in answer:
+            response.message(str(part))
+
+        self.write(response)
+
+        # try:
+        #
+        # except KeyError:
+        #     self.write('Your session has expired.')
+        #     return
+        #
+        # self.entries.append((question, answer))
+        # # TODO Set up to use twillio or some othe service
+        # self.render('index.html', ident=ident, entries=self.entries)
 
 
 def main():
