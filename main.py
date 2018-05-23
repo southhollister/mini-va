@@ -103,7 +103,9 @@ class MainHandler(tornado.web.RequestHandler):
         answer = self.sessions[from_num].engine.ask(question, use_parts=True)
         response = MessagingResponse()
         for part in answer:
-            response.message(str(part))
+            message = Message()
+            message.body(str(part))
+            response.append(message)
 
         self.write(response)
 
@@ -133,7 +135,7 @@ def main():
     )
     application = tornado.web.Application([
         (r"/", MainHandler),
-    ], **settings)
+    ])  # , **settings)
 
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(int(os.environ.get('PORT', 5000)))
