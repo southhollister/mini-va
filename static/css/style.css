@@ -1,0 +1,92 @@
+* {
+    font-family: Helvetica, sans-serif;
+}
+p {
+    color: red;
+
+}
+
+/*Convo box*/
+#convo-box {
+    background: grey;
+    padding: 1em;
+    min-width:200px;
+    width: 300px;
+
+}
+
+#form {
+    width: 100%;
+    min-width: 200px;
+    margin: auto;
+
+}
+
+#form > input, #form > button {
+    display: block;
+    width: 100%;
+    margin: 2px 0;
+}
+
+#convo-history {
+    width: 90%;
+    min-width: 200px;
+    min-height: 400px;
+    max-height: 400px;
+    padding: 1em;
+    margin: auto;
+    background: white;
+    overflow-y: scroll;
+}
+
+.question-bubble, .bot-text-bubble {
+    border-radius: .5em;
+    padding: .5em .5em;
+    width: 80%;
+    margin: 0;
+    margin-bottom: 3px;
+    min-height: 25px;
+    position: relative;
+}
+
+.question-bubble {
+    color: white;
+    background-color: blue;
+    float: right;
+}
+
+.question-bubble:after {
+   content:"";
+   position: absolute;
+   left: 100%;
+   top: 33%;
+   width: 0;
+   height: 0;
+   border-top: 7px solid transparent;
+   border-left: 15px solid blue;
+   border-bottom: 7px solid transparent;
+}
+
+.bot-text-bubble {
+    color: black;
+    background: silver;
+    float: left;
+    word-break: break-all;
+}
+
+.bot-text-bubble:before {
+   content:"";
+   position: absolute;
+   right: 100%;
+   top: 33%;
+   width: 0;
+   height: 0;
+   border-top: 7px solid transparent;
+   border-right: 15px solid silver;
+   border-bottom: 7px solid transparent;
+}
+
+.current-tran {
+    /*color:red;*/
+    display:none;
+}

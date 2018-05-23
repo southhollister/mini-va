@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <title>Cox App</title>
+        <link rel="stylesheet" href="../static/css/style.css" type="text/css"/>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+        <script src="../static/js/scripts.js"></script>
+    </head>
+    <body>
+        <p>ident: {{ident}}</p>
+        <div id="convo-box">
+            <div id="convo-history">
+                {%for q, a in entries%}
+                    {% if q%}
+                        {% module TextBubble(q) %}
+                    {% end %}
+                    <!--{{len(a)}}-->
+                    {% set  extra_classes = []%}
+                    {% if a == entries[-1][1] %}
+                        <!--{{ extra_classes.append('current-tran') }}-->
+                    {% end %}
+
+                    {% for p in a %}
+                        {% if p == a[-1] %}
+                            <!--{{ extra_classes.append('last-bubble') }}-->
+                        {% end %}
+
+                        {% if extra_classes %}
+                            {% module BotText(text=p, extra_classes=extra_classes) %}
+                        {% else %}
+                            {% module BotText(text=p) %}
+                        {% end %}
+                    {% end %}
+
+                {% end %}
+            </div>
+            <form id="form" method="POST">
+                <input type="text" name="input-bar">
+                <input type="hidden" value={{ident}} name="ident">
+                {% module xsrf_form_html() %}
+                <button id="submit-button" type="submit" value="Ask">Ask</button>
+            </form>
+        </div>
+
+    </body>
+</html>
