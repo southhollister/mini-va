@@ -22,10 +22,13 @@ class VPerson(object):
             self._params[attr] = xml.find(attr).text
         return resp
 
-    def ask(self, question):
+    def ask(self, question, use_parts=False):
         """shortcut method for asking a text question and getting a text answer"""
         resp = self.request(entry=question)
-        return Answer(resp)
+        if not use_parts:
+            return Answer(resp)
+        else:
+            return AnswerParts(resp)
 
 
 class Answer(object):
