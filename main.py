@@ -22,7 +22,7 @@ class Engine(VPerson):
 
         :returns dict of init_text, ident, *args
         """
-        resp = self.request(kwargs)
+        resp = self.request(**kwargs)
         xml = ET.fromstring(resp.content)
         ident = xml.find('ident').text
         if use_parts:
