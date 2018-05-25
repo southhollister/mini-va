@@ -187,11 +187,11 @@ class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
             session = sessions[ident]
             #only run on post transaction session transactions
             if len(session['entries']) < 2:
-                print 'skipping %s' % ident
+                print('skipping %s' % ident)
                 continue
             if session.get('timer'):
                 session['timer'] -=1
-                print session['timer']
+                print(session['timer'])
 
             if session['timer'] is not None and session['timer'] <= 0:
                 # url = os.environ.get('URL', 'localhost:5000')
@@ -203,7 +203,7 @@ class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
                 # r = requests.post(url, params=params)
 
                 r = session['engine'].engine.ask('autosubmission', use_parts=True)
-                print r
+                print(r)
                 session['timer'] = None
                 # print 'call active close'
                 break
