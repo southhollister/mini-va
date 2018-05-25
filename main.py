@@ -16,7 +16,7 @@ TWILIO = True
 
 
 class Engine(VPerson):
-    def transaction(self, use_parts=True, *args, **kwargs):
+    def transaction(self, *args, **kwargs):
         """helper function to display transaction; return value used to set ident key in sessions dictionary; see post method
         args path to xml element element; elements divided by "/"
 
@@ -25,10 +25,7 @@ class Engine(VPerson):
         resp = self.request(**kwargs)
         xml = ET.fromstring(resp.content)
         ident = xml.find('ident').text
-        if use_parts:
-            text = AnswerParts(resp)
-        else:
-            text = Answer(resp)
+        text = AnswerParts(resp)
 
         d = {'ident': ident, 'text': text}
 
