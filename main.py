@@ -6,12 +6,13 @@ import tornado.ioloop
 import tornado.web
 import xml.etree.ElementTree as ET
 from twilio.twiml.messaging_response import Message, MessagingResponse
+from twilio.rest import Client
 import requests
 
 
 ACCOUNT_SID = "AC17f854bd01970aab68b981a47b8e4b51"
 ACCOUNT_TOKEN = "5422517ccbeb628e6bfccbc76eddeb49"
-
+CLIENT = Client(ACCOUNT_SID, ACCOUNT_TOKEN)
 TWILIO = True
 
 
@@ -28,8 +29,8 @@ class Engine(VPerson):
         text = AnswerParts(resp)
 
         d = {'ident': ident, 'text': text}
-        print(xml.find(args[0]).text)
-        print(args)
+        # print(xml.find(args[0]).text)
+        # print(args)
 
         # extra args from xml
         for val in args:
@@ -139,6 +140,7 @@ class MainHandler(tornado.web.RequestHandler):
             from_num = self.get_argument('From')
 
             if from_num not in self.sessions:
+                print('New Session @ %s' % from_num)
                 self.sessions[from_num] = {
                     'engine': self,
                     'entries': []
@@ -147,11 +149,11 @@ class MainHandler(tornado.web.RequestHandler):
             session = self.sessions[from_num]
             # Make engine request
             res = session['engine'].engine.transaction('autosubmitmode', 'autosubmitwaittime', entry='question')
-
+            print(res)
             try:
                 # set up active close timer
-                if res.get('autosubmitmode') == 'true':
-                    session['timer'] = res['autosubmitwaittime']
+                if res.get('autosubmitmode') == 'true' and session.get('timer', 0) is not None:
+                    session['timer'] = 10  # int(res['autosubmitwaittime'])
                 else:
                     session['timer'] = None
 
@@ -188,13 +190,13 @@ class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
 
         for ident in sessions:
             session = sessions[ident]
-            #only run on post transaction session transactions
+            # only run on post transaction session transactions
             if len(session['entries']) < 2:
-                print('skipping %s' % ident)
+
                 continue
             if session.get('timer'):
-                session['timer'] -=1
-                print(session['timer'])
+                session['timer'] -= 1
+                print('%s || %s' % (ident, session['timer']))
 
             if session['timer'] is not None and session['timer'] <= 0:
                 # url = os.environ.get('URL', 'localhost:5000')
@@ -206,12 +208,16 @@ class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
                 # r = requests.post(url, params=params)
 
                 r = session['engine'].engine.ask('autosubmission', use_parts=True)
-                print(r)
-                session['timer'] = None
-                # print 'call active close'
-                break
+                print('%s || %s' % (ident, r))
 
-    # def handle_callback_exception(self):
+                session['timer'] = None
+                print('%s || call active close' % ident)
+                message = CLIENT.messages.create(
+                    to=ident,
+                    from_='+12038729948',
+                    body=r
+                )
+                print(message)
 
 
 def main():
@@ -228,7 +234,6 @@ def main():
             debug=True,
             autoescape=None
         )
-
     else:
         settings = {}
 
@@ -239,7 +244,7 @@ def main():
     service = ActiveCloseTimer()
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(int(os.environ.get('PORT', 5000)))
-    # service.start()
+    service.start()
     tornado.ioloop.IOLoop.instance().start()
 
 
