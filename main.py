@@ -148,7 +148,7 @@ class MainHandler(tornado.web.RequestHandler):
 
             session = self.sessions[from_num]
             # Make engine request
-            res = session['engine'].engine.transaction('autosubmitmode', 'autosubmitwaittime', entry='question')
+            res = session['engine'].engine.transaction('autosubmitmode', 'autosubmitwaittime', entry=question)
             print(res)
             try:
                 # set up active close timer
