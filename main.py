@@ -29,7 +29,7 @@ class Engine(VPerson):
 
         d = {'ident': ident, 'text': text}
         print(xml.find(args[0]).text)
-        print args
+        print(args)
         # extra args from xml
         for val in args:
             # key = val.split('/')[-1]
