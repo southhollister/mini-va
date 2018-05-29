@@ -30,10 +30,11 @@ class Engine(VPerson):
         d = {'ident': ident, 'text': text}
         print(xml.find(args[0]).text)
         print(args)
+
         # extra args from xml
         for val in args:
             # key = val.split('/')[-1]
-            if xml.find(val):
+            if xml.find(val).text is not None:
                 d[val] = xml.find(val).text
 
         return d
@@ -149,7 +150,7 @@ class MainHandler(tornado.web.RequestHandler):
 
             try:
                 # set up active close timer
-                if res['autosubmitmode'] == 'true':
+                if res.get('autosubmitmode') == 'true':
                     session['timer'] = res['autosubmitwaittime']
                 else:
                     session['timer'] = None
