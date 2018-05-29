@@ -28,12 +28,12 @@ class Engine(VPerson):
         text = AnswerParts(resp)
 
         d = {'ident': ident, 'text': text}
-
+        print(xml.find(args[0]).text)
         # extra args from xml
         for val in args:
-            key = val.split('/')[-1]
+            # key = val.split('/')[-1]
             if xml.find(val):
-                d[key] = xml.find('val').text
+                d[val] = xml.find(val).text
 
         return d
 
@@ -93,7 +93,6 @@ class MainHandler(tornado.web.RequestHandler):
     def initialize(self, active_close=None):
         self.engine = Engine("https://vastage1.creativevirtual15.com/quarkstaging/bot.htm")
 
-
     def get(self):
         init = self.engine.transaction('autosubmitmode', 'autosubmitwaittime')
         ident = init['ident']
@@ -147,11 +146,16 @@ class MainHandler(tornado.web.RequestHandler):
             # Make engine request
             res = session['engine'].engine.transaction('autosubmitmode', 'autosubmitwaittime', entry='question')
 
-            # set up active close timer
-            if res['autosubmitmode'] == 'true':
-                session['timer'] = res['autosubmitwaittime']
-            else:
-                session['timer'] = None
+            try:
+                # set up active close timer
+                if res['autosubmitmode'] == 'true':
+                    session['timer'] = res['autosubmitwaittime']
+                else:
+                    session['timer'] = None
+
+            except KeyError:
+                print(res)
+                exit()
 
             # grab answer text/parts
             answer = res['text']
