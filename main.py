@@ -10,8 +10,8 @@ from twilio.rest import Client
 import requests
 
 
-ACCOUNT_SID = "AC17f854bd01970aab68b981a47b8e4b51"
-ACCOUNT_TOKEN = "5422517ccbeb628e6bfccbc76eddeb49"
+ACCOUNT_SID = os.environ.get('ACCOUNT_SID')
+ACCOUNT_TOKEN = os.environ.get('ACCOUNT_TOKEN')
 CLIENT = Client(ACCOUNT_SID, ACCOUNT_TOKEN)
 
 
