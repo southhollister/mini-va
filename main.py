@@ -13,7 +13,6 @@ import requests
 ACCOUNT_SID = "AC17f854bd01970aab68b981a47b8e4b51"
 ACCOUNT_TOKEN = "5422517ccbeb628e6bfccbc76eddeb49"
 CLIENT = Client(ACCOUNT_SID, ACCOUNT_TOKEN)
-TWILIO = True
 
 
 class Engine(VPerson):
@@ -88,22 +87,19 @@ class AnswerParts(object):
     __repr__ = __str__
 
 
-class MainHandler(tornado.web.RequestHandler):
-
+class WebHandler(tornado.web.RequestHandler):
     sessions = {}
     timer = None
 
-    def initialize(self, active_close=None):
+    def initialize(self):
         self.engine = Engine("https://vastage1.creativevirtual15.com/quarkstaging/bot.htm")
 
     def get(self):
         init = self.engine.transaction('autosubmitmode', 'autosubmitwaittime')
         ident = init['ident']
         answer = init['text']
-        # if transaction.get('autosubmitmode') == 'true':
-        self.timer = 10  # int(transaction.get('autosubmitwaittime', 0))
+        self.timer = int(init.get('autosubmitwaittime', 0))
 
-        # Inital request is get request; TWILIO DOES NOT USE GET REQUESTS UNLESS CONFIGURED TO DO SO
         # Store engine reference, auto submit timer, convo history
         self.sessions[ident] = {
             'engine': self,
@@ -115,68 +111,78 @@ class MainHandler(tornado.web.RequestHandler):
         self.render('index.html', ident=ident, entries=self.sessions[ident]['entries'])
 
     def post(self, *args, **kwargs):
-        if not TWILIO:
-            question = self.get_argument('input-bar')
-            ident = self.get_argument('ident')
-            xsrf = self.get_argument('_xsrf')
 
-            session = self.sessions[ident]
-            try:
-                answer = session['engine'].engine.ask(question, use_parts=True)
-            except KeyError:
-                self.write('Your session has expired.')
-                return
+        question = self.get_argument('input-bar')
+        ident = self.get_argument('ident')
+        xsrf = self.get_argument('_xsrf')
 
-            session['entries'].append((question, answer))
-            session['timer'] = session['active_close_time']
-            session['xsrf'] = xsrf
+        session = self.sessions[ident]
+        try:
+            answer = session['engine'].engine.ask(question, use_parts=True)
+        except KeyError:
+            self.write('Your session has expired.')
+            return
 
-            self.render('index.html', ident=ident, entries=session['entries'])
+        session['entries'].append((question, answer))
+        session['timer'] = session['active_close_time']
+        session['xsrf'] = xsrf
 
-            print (session)
+        self.render('index.html', ident=ident, entries=session['entries'])
 
-        else:
-            question = self.get_argument('Body')
-            from_num = self.get_argument('From')
+        print (session)
 
-            if from_num not in self.sessions:
-                print('New Session @ %s' % from_num)
-                self.sessions[from_num] = {
-                    'engine': self,
-                    'entries': []
-                }
 
-            session = self.sessions[from_num]
-            # Make engine request
-            res = session['engine'].engine.transaction('autosubmitmode', 'autosubmitwaittime', entry=question)
+class SMSHandler(tornado.web.RequestHandler):
+
+    sessions = {}
+    timer = None
+
+    def initialize(self):
+        self.engine = Engine("https://vastage1.creativevirtual15.com/quarkstaging/bot.htm")
+
+    def post(self, *args, **kwargs):
+
+        question = self.get_argument('Body')
+        from_num = self.get_argument('From')
+
+        if from_num not in self.sessions:
+            print('New Session @ %s' % from_num)
+            self.sessions[from_num] = {
+                'engine': self,
+                'entries': []
+            }
+
+        session = self.sessions[from_num]
+        # Make engine request
+        res = session['engine'].engine.transaction('autosubmitmode', 'autosubmitwaittime', entry=question)
+        print(res)
+        try:
+            # set up active close timer
+            if res.get('autosubmitmode') == 'true' and session.get('timer', 0) is not None:
+                session['timer'] = 10  # int(res['autosubmitwaittime'])
+            else:
+                session['timer'] = None
+
+        except KeyError:
             print(res)
-            try:
-                # set up active close timer
-                if res.get('autosubmitmode') == 'true' and session.get('timer', 0) is not None:
-                    session['timer'] = 10  # int(res['autosubmitwaittime'])
-                else:
-                    session['timer'] = None
+            exit()
 
-            except KeyError:
-                print(res)
-                exit()
+        # grab answer text/parts
+        answer = res['text']
 
-            # grab answer text/parts
-            answer = res['text']
+        # keep convo history
+        session['entries'].append((question, answer))
 
-            # keep convo history
-            session['entries'].append((question, answer))
+        response = MessagingResponse()
+        for part in answer:
+            message = Message()
+            message.body(str(part))
+            response.append(message)
 
-            response = MessagingResponse()
-            for part in answer:
-                message = Message()
-                message.body(str(part))
-                response.append(message)
+        self.write(str(response))
 
-            self.write(str(response))
-
-            # store session
-            self.sessions[from_num] = session
+        # store session
+        self.sessions[from_num] = session
 
 
 class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
@@ -186,7 +192,7 @@ class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
 
     def _process(self):
         """Check each sessions timer and decrease by one; when timer reaches 0 active close is triggered"""
-        sessions = MainHandler.sessions
+        sessions = SMSHandler.sessions
 
         for ident in sessions:
             session = sessions[ident]
@@ -199,13 +205,6 @@ class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
                 print('%s || %s' % (ident, session['timer']))
 
             if session['timer'] is not None and session['timer'] <= 0:
-                # url = os.environ.get('URL', 'localhost:5000')
-                # params = {
-                #     'ident': ident,
-                #     'input_bar': 'autosubmission',
-                #     '_xsrf': session['xsrf']
-                # }
-                # r = requests.post(url, params=params)
 
                 r = session['engine'].engine.ask('autosubmission', use_parts=True)
                 print('%s || %s' % (ident, r))
@@ -222,23 +221,21 @@ class ActiveCloseTimer(tornado.ioloop.PeriodicCallback):
 
 def main():
 
-    if not TWILIO:
-        settings = dict(
-            ui_modules=ui,
-            cookie_secret=str(os.urandom(45)),
-            template_path=os.path.join(os.path.dirname(__file__), 'templates'),
-            static_path=os.path.join(os.path.dirname(__file__), 'static'),
-            xsrf_cookies=True,
-            autoreload=True,
-            gzip=True,
-            debug=True,
-            autoescape=None
-        )
-    else:
-        settings = {}
+    settings = dict(
+        ui_modules=ui,
+        cookie_secret=str(os.urandom(45)),
+        template_path=os.path.join(os.path.dirname(__file__), 'templates'),
+        static_path=os.path.join(os.path.dirname(__file__), 'static'),
+        xsrf_cookies=True,
+        autoreload=True,
+        gzip=True,
+        debug=True,
+        autoescape=None
+    )
 
     application = tornado.web.Application([
-        (r"/", MainHandler),
+        (r"/", SMSHandler),
+        (r'/web', WebHandler)
     ], **settings)
 
     service = ActiveCloseTimer()
