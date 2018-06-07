@@ -10,8 +10,8 @@ from twilio.rest import Client
 import requests
 
 
-ACCOUNT_SID = os.environ.get('ACCOUNT_SID')
-ACCOUNT_TOKEN = os.environ.get('ACCOUNT_TOKEN')
+ACCOUNT_SID = os.environ.get('TWILIO_SID')
+ACCOUNT_TOKEN = os.environ.get('TWILIO_TOKEN')
 CLIENT = Client(ACCOUNT_SID, ACCOUNT_TOKEN)
 
 
