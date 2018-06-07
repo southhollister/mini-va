@@ -226,7 +226,7 @@ def main():
         cookie_secret=str(os.urandom(45)),
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
         static_path=os.path.join(os.path.dirname(__file__), 'static'),
-        xsrf_cookies=True,
+        # xsrf_cookies=True,
         autoreload=True,
         gzip=True,
         debug=True,
